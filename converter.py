@@ -9,27 +9,57 @@ OBSIDIAN_ATTACHMENTS = ""
 OBSIDIAN_OUTPUT = ""
 LIBREOFFICE_EXECUTABLE = ""
 DEFAULT_MEDIA_OUTPUT = ""
+FILES_TO_COPY = []
 
 def convert_directories(dir):
+    """ Recursive directory batch conversion/importation"""
+    if(dir is None):
+        raise Exception("Directory argument cannot be empty")
     
+    
+    for (root,_,files) in os.walk(dir, topdown=True):
+        for file in files:
+            global OBSIDIAN_OUTPUT
+            _, file_extension = os.path.splitext(file)
+            input_file_path = os.path.join(root, file)
+            relpath_to_deepdir = root.replace(dir, "") # relative path to add to obsidian
+            output_file_path = os.path.join(OBSIDIAN_OUTPUT, relpath_to_deepdir[1:], file) # remove 1st \ to relpath to fix issue path issue
 
+            # If file is docx, convert it
+            if os.path.isfile(input_file_path) and file_extension in [".docx", ".doc"]:
+                output_file_path = re.sub("\.docx?", ".md", output_file_path) # Replace the filepath from .doc(x) to .md
+                current_dir = os.path.dirname(input_file_path)
+                print(input_file_path)
+                print(output_file_path)
+                print(current_dir)
+                print("---")
+                # run_conversion(current_dir, input_file_path, output_file_path)
+
+            # If file is part of the files-to-copy arguments, just copy it to the obsidian vault
+            if os.path.isfile(input_file_path) and file_extension in FILES_TO_COPY:
+                shutil.copyfile(input_file_path, output_file_path)
+    
 def convert_directory(dir):
+    """ Single directory batch conversion/importation"""
     if(dir is None):
         raise Exception("Directory argument cannot be empty")
     
     for filename in os.listdir(dir):
         # checking if it is a file
         _, file_extension = os.path.splitext(filename)
-        if os.path.isfile(os.path.join(dir, filename)) and file_extension in [".docx", ".doc"]:
-            print("Working on " + filename)
-            run_conversion(dir, filename)
+        input_file_path = os.path.join(dir, filename)
+        output_file_path = os.path.join(OBSIDIAN_OUTPUT, filename) # Set the output folder as the obsidian output folder
+
+        if os.path.isfile(input_file_path) and file_extension in [".docx", ".doc"]:
+            print("Working on " + input_file_path)
+            output_file_path = re.sub("\.docx?", ".md", output_file_path) # Replace the filename from .doc(x) to .md
+            run_conversion(dir, input_file_path, output_file_path)
+        # If file is part of the files-to-copy arguments, just copy it to the obsidian vault
+        if os.path.isfile(input_file_path) and file_extension in FILES_TO_COPY:
+            shutil.copyfile(input_file_path, output_file_path)
 
 
-def run_conversion(dir, filename):
-    input_file_path = os.path.join(dir, filename)
-    output_filename = re.sub(".docx?", ".md", filename) # Replace the filename from .doc(x) to .md
-    output_file_path = os.path.join(OBSIDIAN_OUTPUT, output_filename) # Set the output folder as the obsidian output folder
-
+def run_conversion(dir, input_file_path, output_file_path):
     global DEFAULT_MEDIA_OUTPUT
     DEFAULT_MEDIA_OUTPUT = os.path.join(dir, 'media') # Default pandoc output for images is a folder called /media
 
@@ -113,16 +143,19 @@ if __name__ == '__main__':
     parser.add_argument("obsidian_attachment_directory", help="Your obsidian's attachment directory")
     parser.add_argument("obsidian_output_directory", help="Your obsidian's output directory")
     parser.add_argument("--libreoffice", required=False, help="The path to your libreoffice executable", default="C:\Program Files\LibreOffice\program\soffice.exe")
-    parser.add_argument("-r", "--recursive", help="Runs recursively")
+    parser.add_argument("--files_to_copy",required=False, help="A comma separated list of other files that can be copied to the vault", default=".pdf")
+    parser.add_argument("-r", "--recursive", help="Runs recursively", action='store_true')
 
     args = parser.parse_args()
-    OBSIDIAN_ATTACHMENTS = args.obsidian_attachment_directory
-    OBSIDIAN_OUTPUT = args.obsidian_output_directory
+    OBSIDIAN_ATTACHMENTS = os.path.abspath(args.obsidian_attachment_directory)
+    OBSIDIAN_OUTPUT = os.path.abspath(args.obsidian_output_directory)
     LIBREOFFICE_EXECUTABLE = args.libreoffice
+    FILES_TO_COPY = args.files_to_copy.split(",")
+
 
     try:
         if(args.recursive):
-            convert_directories(args.input_directory)
+            convert_directories(os.path.abspath(args.input_directory))
         else:
             convert_directory(args.input_directory)
     except KeyboardInterrupt:

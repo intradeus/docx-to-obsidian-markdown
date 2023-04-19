@@ -52,7 +52,7 @@ python converter.py "C:\Documents\Old Word Docs\Biologie" "C:\Documents\Obsidian
 I used this script to import many docx into my obsidian vault and was able to fix a few errors i've encountered, but if you notice new errors OR would like to add more modifications after the conversion, open an issue or a PR :)
 
 ## Roadmap
-The next implementation I wanna add are :
-- a recursive argument, to recursively import files.
+Next ideas I wanna implement are :
+- [x] recursive file import.
 
 
