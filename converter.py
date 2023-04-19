@@ -10,6 +10,8 @@ OBSIDIAN_OUTPUT = ""
 LIBREOFFICE_EXECUTABLE = ""
 DEFAULT_MEDIA_OUTPUT = ""
 
+def convert_directories(dir):
+    
 
 def convert_directory(dir):
     if(dir is None):
@@ -111,13 +113,18 @@ if __name__ == '__main__':
     parser.add_argument("obsidian_attachment_directory", help="Your obsidian's attachment directory")
     parser.add_argument("obsidian_output_directory", help="Your obsidian's output directory")
     parser.add_argument("--libreoffice", required=False, help="The path to your libreoffice executable", default="C:\Program Files\LibreOffice\program\soffice.exe")
+    parser.add_argument("-r", "--recursive", help="Runs recursively")
+
     args = parser.parse_args()
     OBSIDIAN_ATTACHMENTS = args.obsidian_attachment_directory
     OBSIDIAN_OUTPUT = args.obsidian_output_directory
     LIBREOFFICE_EXECUTABLE = args.libreoffice
 
     try:
-        convert_directory(args.input_directory)
+        if(args.recursive):
+            convert_directories(args.input_directory)
+        else:
+            convert_directory(args.input_directory)
     except KeyboardInterrupt:
         print("Done")
         sys.exit(0)
