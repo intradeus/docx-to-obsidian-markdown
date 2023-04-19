@@ -31,16 +31,19 @@ def convert_directories(dir):
                 output_file_path = re.sub("\.docx?", ".md", output_file_path) # Replace the filepath from .doc(x) to .md
                 current_dir = os.path.dirname(input_file_path)
                 Path(output_dir_path).mkdir(parents=True, exist_ok=True) # Create necessary directories
-                print(input_file_path)
-                print(output_file_path)
-                print(current_dir)
-                print("---")
+                print("Copying file : " + input_file_path)
+                print("To : " + output_file_path)
                 run_conversion(current_dir, input_file_path, output_file_path)
 
             # If file is part of the files-to-copy arguments, just copy it to the obsidian vault
             if os.path.isfile(input_file_path) and file_extension in FILES_TO_COPY:
+                print("Copying file : " + input_file_path)
+                print("To : " + output_file_path)
+
                 shutil.copyfile(input_file_path, output_file_path)
-    
+
+            print("---")
+
 def convert_directory(dir):
     """ Single directory batch conversion/importation"""
     if(dir is None):
@@ -53,12 +56,18 @@ def convert_directory(dir):
         output_file_path = os.path.join(OBSIDIAN_OUTPUT, filename) # Set the output folder as the obsidian output folder
 
         if os.path.isfile(input_file_path) and file_extension in [".docx", ".doc"]:
-            print("Working on " + input_file_path)
             output_file_path = re.sub("\.docx?", ".md", output_file_path) # Replace the filename from .doc(x) to .md
+            print("Copying file : " + input_file_path)
+            print("To : " + output_file_path)
             run_conversion(dir, input_file_path, output_file_path)
+
         # If file is part of the files-to-copy arguments, just copy it to the obsidian vault
         if os.path.isfile(input_file_path) and file_extension in FILES_TO_COPY:
+            print("Copying file : " + input_file_path)
+            print("To : " + output_file_path)
             shutil.copyfile(input_file_path, output_file_path)
+            
+        print("---")
 
 
 def run_conversion(dir, input_file_path, output_file_path):
@@ -71,11 +80,12 @@ def run_conversion(dir, input_file_path, output_file_path):
         subprocess.run(cmd_str, shell=True)
     except Exception as e:
         print("Error while converting from doc(x) to markdown : " + e)
-    # Remove any known artefacts from the file
-    clean_file(output_file_path)
 
-    clean_images(output_file_path)
+    clean_file(output_file_path)  # Remove any known artefacts from the file
 
+    clean_images(output_file_path) # Convert images and rename them in each file
+
+    shutil.rmtree(DEFAULT_MEDIA_OUTPUT) # Delete the media folder created by pandoc
     
 def clean_file(file):
     """ Clean file of other docx artefacts"""
@@ -145,7 +155,7 @@ if __name__ == '__main__':
     parser.add_argument("obsidian_attachment_directory", help="Your obsidian's attachment directory")
     parser.add_argument("obsidian_output_directory", help="Your obsidian's output directory")
     parser.add_argument("--libreoffice", required=False, help="The path to your libreoffice executable", default="C:\Program Files\LibreOffice\program\soffice.exe")
-    parser.add_argument("--files_to_copy",required=False, help="A comma separated list of other files that can be copied to the vault", default=".pdf")
+    parser.add_argument("--files_to_copy",required=False, help="A comma separated list of other files that can be copied to the vault (ex: .pdf,.xlsx)")
     parser.add_argument("-r", "--recursive", help="Runs recursively", action='store_true')
 
     args = parser.parse_args()
@@ -153,7 +163,6 @@ if __name__ == '__main__':
     OBSIDIAN_OUTPUT = os.path.abspath(args.obsidian_output_directory)
     LIBREOFFICE_EXECUTABLE = args.libreoffice
     FILES_TO_COPY = args.files_to_copy.split(",")
-
 
     try:
         if(args.recursive):

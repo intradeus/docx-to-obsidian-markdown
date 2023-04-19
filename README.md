@@ -43,10 +43,16 @@ If you don't have LibreOffice installed in the default path (C:\Program Files\Li
 --libreoffice <path-to-soffice.exe>
 ```
 
-Exemple : 
+If you want to run recursively (convert/import all files from all subfolders or the input folders into the same structure but in obsidian), add this argument :
 ```
-python converter.py "C:\Documents\Old Word Docs\Biologie" "C:\Documents\Obsidian Vault\Attachments" "C:\Documents\Obsidian Vault\Biologie"
+- r
 ```
+
+(Helper) If you want to copy other files into the obsidian vault, not just the docx>md files, you can add this argument with a comma-separated list of extensions:
+```
+--files_to_copy .pdf,.xlsx (defaults to pdf)
+```
+
 
 ## Helping 
 I used this script to import many docx into my obsidian vault and was able to fix a few errors i've encountered, but if you notice new errors OR would like to add more modifications after the conversion, open an issue or a PR :)
