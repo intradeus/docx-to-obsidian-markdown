@@ -32,9 +32,11 @@ def run_conversion(dir, filename):
     DEFAULT_MEDIA_OUTPUT = os.path.join(dir, 'media') # Default pandoc output for images is a folder called /media
 
     # Use pandoc to convert the doc(x) to markdown, using standalone tags and extracting media to our dir folder (it will create a media subfolder)
-    cmd_str = "pandoc -f docx -t markdown -s --wrap=none --extract-media=\""+ dir + "\" \"" + input_file_path + "\" -o \"" + output_file_path + "\""
-    subprocess.run(cmd_str, shell=True)
-
+    try:
+        cmd_str = "pandoc -f docx -t markdown -s --wrap=none --extract-media=\""+ dir + "\" \"" + input_file_path + "\" -o \"" + output_file_path + "\""
+        subprocess.run(cmd_str, shell=True)
+    except Exception as e:
+        print("Error while converting from doc(x) to markdown : " + e)
     # Remove any known artefacts from the file
     clean_file(output_file_path)
 
@@ -71,8 +73,12 @@ def clean_images(md_file_path):
 
 def convert_anymf_to_png(img_path, img_extension):
     print("converting file " + img_path + " to png")
-    cmd_str = "\"" + LIBREOFFICE_EXECUTABLE + "\" --headless --convert-to png \"" + img_path + "\" --outdir \"" + DEFAULT_MEDIA_OUTPUT + "\""
-    subprocess.run(cmd_str, shell=True)
+    try:
+        cmd_str = "\"" + LIBREOFFICE_EXECUTABLE + "\" --headless --convert-to png \"" + img_path + "\" --outdir \"" + DEFAULT_MEDIA_OUTPUT + "\""
+        subprocess.run(cmd_str, shell=True)
+    except Exception as e:
+        print("Error when converting " + img_path + " to png : " + e)
+        
     os.remove(img_path)
     new_png_image_path = img_path.replace(img_extension, ".png")
     im = Image.open(new_png_image_path)

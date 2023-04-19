@@ -27,7 +27,7 @@ python -m pip install -r requirements.txt
 
 ## Test
 
-Once requirements are installed, you can test the script with the test folder provided by running the following command: 
+Once requirements are installed, you can test the script yourself with the test folder provided by running the following command: 
 ```
 python converter.py ./input_test ./obsidian_vault/attachments ./obsidian_vault 
 ```
