@@ -4,6 +4,7 @@ import uuid
 import re
 from PIL import Image, ImageChops
 import shutil
+from pathlib import Path
 
 OBSIDIAN_ATTACHMENTS = ""
 OBSIDIAN_OUTPUT = ""
@@ -23,17 +24,18 @@ def convert_directories(dir):
             _, file_extension = os.path.splitext(file)
             input_file_path = os.path.join(root, file)
             relpath_to_deepdir = root.replace(dir, "") # relative path to add to obsidian
-            output_file_path = os.path.join(OBSIDIAN_OUTPUT, relpath_to_deepdir[1:], file) # remove 1st \ to relpath to fix issue path issue
-
+            output_dir_path = os.path.join(OBSIDIAN_OUTPUT, relpath_to_deepdir[1:]) # remove 1st \ to relpath to fix issue path issue
+            output_file_path = os.path.join(output_dir_path, file)
             # If file is docx, convert it
             if os.path.isfile(input_file_path) and file_extension in [".docx", ".doc"]:
                 output_file_path = re.sub("\.docx?", ".md", output_file_path) # Replace the filepath from .doc(x) to .md
                 current_dir = os.path.dirname(input_file_path)
+                Path(output_dir_path).mkdir(parents=True, exist_ok=True) # Create necessary directories
                 print(input_file_path)
                 print(output_file_path)
                 print(current_dir)
                 print("---")
-                # run_conversion(current_dir, input_file_path, output_file_path)
+                run_conversion(current_dir, input_file_path, output_file_path)
 
             # If file is part of the files-to-copy arguments, just copy it to the obsidian vault
             if os.path.isfile(input_file_path) and file_extension in FILES_TO_COPY:
