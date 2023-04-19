@@ -27,9 +27,18 @@ python -m pip install -r requirements.txt
 
 ## Test
 
+#### Non-Recursive (single directory)
+
 Once requirements are installed, you can test the script yourself with the test folder provided by running the following command: 
 ```
-python converter.py ./input_test ./obsidian_vault/attachments ./obsidian_vault 
+python converter.py ./input_test ./obsidian_vault/attachments ./obsidian_vault --additional_files .xslx,.pdf
+```
+
+#### Recursive (directories, subdirectories and deepdirectories)
+
+Once requirements are installed, you can test the script yourself with the test folder provided by running the following command: 
+```
+python converter.py ./input_test ./obsidian_vault/attachments ./obsidian_vault --additional_files .xslx,.pdf -r
 ```
 
 ## Run 

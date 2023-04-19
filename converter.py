@@ -155,14 +155,14 @@ if __name__ == '__main__':
     parser.add_argument("obsidian_attachment_directory", help="Your obsidian's attachment directory")
     parser.add_argument("obsidian_output_directory", help="Your obsidian's output directory")
     parser.add_argument("--libreoffice", required=False, help="The path to your libreoffice executable", default="C:\Program Files\LibreOffice\program\soffice.exe")
-    parser.add_argument("--files_to_copy",required=False, help="A comma separated list of other files that can be copied to the vault (ex: .pdf,.xlsx)")
+    parser.add_argument("--additional_files",required=False, help="A comma separated list of other files that can be copied to the vault (ex: .pdf,.xlsx)")
     parser.add_argument("-r", "--recursive", help="Runs recursively", action='store_true')
 
     args = parser.parse_args()
     OBSIDIAN_ATTACHMENTS = os.path.abspath(args.obsidian_attachment_directory)
     OBSIDIAN_OUTPUT = os.path.abspath(args.obsidian_output_directory)
     LIBREOFFICE_EXECUTABLE = args.libreoffice
-    FILES_TO_COPY = args.files_to_copy.split(",")
+    FILES_TO_COPY = args.additional_files.split(",")
 
     try:
         if(args.recursive):
