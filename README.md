@@ -1,67 +1,69 @@
-# Docx to obsidian
+# Docx notes to obsidian
 
-This repo contains a script that can batch import docx files into your obsidian vault.
+Batch import your old large note folders into your obsidian vault, keep the same folder structure and converts `.docx|.doc` to markdown while doing so !
+
+## Features 
+- Batch converts folders and import them straight into your obsidian vault, recursively or not, with media placed in your attachment folder
+- Supports `.docx|.doc` import with conversion to markdown, but it can also import pdf or other files as well (wihtout conversion) to keep your folder structure
+- Converts multimarkdown image format to obsidian image format (`![[image.png]]`)
+- Supports Headings (Word headings 1-5 will be converted to markdown headings 1-5)
+- Supports for lists, tables, images, font alteration (underline, bold & italic) as well as maths, in latex format.
+- Doesn't alter the integrity of your old folders, simply copies your files and deletes the artefacts created (media folders and docx converted from doc).
 
 ## How it works :
-1) All files in the input folder will be converted to an obsidian-flavoured markdown, thanks to pandoc and some custom code.
-2) Images extracted by pandoc will be renamed to a random name (2acfacdf-008d-4f51-9e4e-041720526a04.png) to avoid conflicts
-   1) .emf, .wmf (word images format) will be converted to PNG, thanks to libreoffice
-3) All image backlinks in your documents will be updated to the new UUID provided and transformed to an obsidian image backlink (![[image.png]])
-   1) All existing relative links converted by pandoc (![](C:\path\to\image.png)) will therefore be integrated according to the obsidian standard 
-
-Note: The script is not recursive, it will only import the files from the input directory to the output directory.
-
-## Speeds
-Speeds depends on a lot of factor, including if your images are exported as .emf a lot. What takes the most time is the conversion from .emf to .png.
-I've had runs where 10 docx files would take about 15 seconds, but some others would take 45 seconds.
+The script walks through the folder provided (recursively, or not)
+1) If a file is a `.doc`, it will convert it to docx (with LibreOffice) and continue...
+2) If a file is a `.docx`, it will 
+   a) Convert it to markdown (with Pandoc) and copy it to the exact relative path in your obsidian vault.
+   b) If there were images extracted (to a media folder, by pandoc), it will rename them to a UUID, convert them to png (if `emf` or `wmf`) and replace the multimarkdown link format (`<img src="path-to-your-image.png" .../>`) to an obsidian image format (`![[1234-1234-1234.png]]`)
+   c) It will convert some more multimarkdown format to obsidian flavoured markdown
+3) If a file is something else, it will copy it to the same relative path in your obsidian vault, only if the `--additional_files` argument specifies it.
+4) It then deletes all media folders created by pandoc and all `.docx` files converted from `.doc` in step 2 (original `.doc` files are untouched !)
 
 ## Requirements
 
-1) You must have [Pandoc](https://pandoc.org/installing.html) installed
-2) You must have [LibreOffice](https://www.libreoffice.org/download/download-libreoffice/) installed. This is because we need to use LibreOffice to convert .emf and .wmf image files to png.
+1) You must have [Pandoc](https://pandoc.org/installing.html). We use Pandoc to convert from docx to .md
+2) You must have [LibreOffice](https://www.libreoffice.org/download/download-libreoffice/). We use LibreOffice to convert `doc` to `docx` and `emf/wmf` to `png`
 3) You must install python requirements : 
-```
+```bash
 python -m pip install -r requirements.txt 
 ```
-
-
 ## Test
+I'd suggest to make a test run before, to make sure the settings are good, requirements installed and to test on a few samples of your own files.
 
-#### Non-Recursive (single directory)
-
-Once requirements are installed, you can test the script yourself with the test folder provided by running the following command: 
-```
-python converter.py ./input_test ./obsidian_vault/attachments ./obsidian_vault --additional_files .xslx,.pdf
-```
-
-#### Recursive (directories, subdirectories and deepdirectories)
-
-Once requirements are installed, you can test the script yourself with the test folder provided by running the following command: 
-```
+### Recursive Test (input directory and its subdirectories)
+Files copied from input_test folder and subfolders to obsidian_vault folder. Images stored in obsidian_vault/attachments. PDF and xlsx are also copied.
+```bash
 python converter.py ./input_test ./obsidian_vault/attachments ./obsidian_vault --additional_files .xslx,.pdf -r
 ```
 
+### Non-Recursive Test (input directory only)
+Files copied from input_test folder and subfolders to obsidian_vault folder. Images stored in obsidian_vault/attachments. Docx files only.
+```bash
+python converter.py ./input_test ./obsidian_vault/attachments ./obsidian_vault 
+```
+
 ## Run 
-You can import in your vault using:
-```
-python converter.py <path-to-input> <path-to-obsidian-attachment> <path-to-obsidian-output>
+The run command looks like this :
+```bash
+python converter.py <path-to-input> <path-to-obsidian-attachment> <path-to-obsidian-output> 
 ```
 
-If you don't have LibreOffice installed in the default path (C:\Program Files\LibreOffice\program\soffice.exe) you will need to add the following argument : 
-```
+Additional tags include : 
+```bash
+# If you want to add recursivity
+- r 
+
+# If you don't have LibreOffice installed in the default path (C:\Program Files\LibreOffice\program\soffice.exe)
 --libreoffice <path-to-soffice.exe>
+
+# If you want the script to also copy other files (without any conversion) while going through the folders
+--additional_files .pdf,.xlsx # A comma separated list of extensions (with '.' before); Or
+--additional_files all        # 'all' will copy all other files
 ```
 
-If you want to run recursively (convert/import all files from all subfolders or the input folders into the same structure but in obsidian), add this argument :
-```
-- r
-```
-
-(Helper) If you want to copy other files into the obsidian vault, not just the docx>md files, you can add this argument with a comma-separated list of extensions:
-```
---files_to_copy .pdf,.xlsx (defaults to pdf)
-```
-
+## Speeds
+Speeds depends on a lot of factor, but from my tests, what takes the most time is the conversion from .emf to .png.
 
 ## Helping 
 I used this script to import many docx into my obsidian vault and was able to fix a few errors i've encountered, but if you notice new errors OR would like to add more modifications after the conversion, open an issue or a PR :)
@@ -69,5 +71,4 @@ I used this script to import many docx into my obsidian vault and was able to fi
 ## Roadmap
 Next ideas I wanna implement are :
 - [x] recursive file import.
-
-
+- [ ] Make it work with .doc files
