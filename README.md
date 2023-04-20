@@ -71,4 +71,8 @@ I used this script to import many docx into my obsidian vault and was able to fi
 ## Roadmap
 Next ideas I wanna implement are :
 - [x] recursive file import.
-- [ ] Make it work with .doc files
+- [x] Make it work with .doc files
+- [ ] Add possibility to convert PowerPoints to pdf before importing in obsidian
+- [ ] Add possibility to link unsupported Office files in obsidian (Using ![Sheet](path/to/excel.xlsx))
+
+
