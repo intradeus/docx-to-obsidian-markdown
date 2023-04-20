@@ -60,6 +60,10 @@ Additional tags include :
 # If you want the script to also copy other files (without any conversion) while going through the folders
 --additional_files .pdf,.xlsx # A comma separated list of extensions (with '.' before); Or
 --additional_files all        # 'all' will copy all other files
+
+# If you want to convert all powerpoints (.pptx|.ppt) to a PDF before copying it (NOTE: you have to add '.pptx,.ppt' or 'all' to the `--additional_files` argument) 
+-p
+
 ```
 
 ## Speeds
@@ -72,7 +76,5 @@ I used this script to import many docx into my obsidian vault and was able to fi
 Next ideas I wanna implement are :
 - [x] recursive file import.
 - [x] Make it work with .doc files
-- [ ] Add possibility to convert PowerPoints to pdf before importing in obsidian
+- [x] Add possibility to convert PowerPoints to pdf before importing in obsidian
 - [ ] Add possibility to link unsupported Office files in obsidian (Using ![Sheet](path/to/excel.xlsx))
-
-

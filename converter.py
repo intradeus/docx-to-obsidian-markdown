@@ -12,6 +12,7 @@ LIBREOFFICE_EXECUTABLE = ""
 DEFAULT_MEDIA_OUTPUT = ""
 COPY_ALL_FILES = False
 FILES_TO_COPY = []
+POWERPOINT_TO_PDF = False
 
 def convert_directories(dir):
     """ Recursive directory batch conversion/importation"""
@@ -45,6 +46,13 @@ def convert_directories(dir):
 
             # If file is part of the files-to-copy list, just copy it to the obsidian vault
             if os.path.isfile(input_file_path) and (file_extension in FILES_TO_COPY or COPY_ALL_FILES) and file_extension not in [".docx",".doc"]:
+                if file_extension in [".pptx", ".ppt"] and POWERPOINT_TO_PDF:
+                    print("Converting : " + input_file_path)
+                    print("To : PDF")
+                    input_file_path = convert_pp_to_pdf(input_file_path)
+                    output_file_path = re.sub("\.pptx?$", ".pdf", output_file_path)
+                    to_delete.append(input_file_path)
+
                 print("Copying file : " + input_file_path)
                 print("To : " + output_file_path)
                 Path(output_dir_path).mkdir(parents=True, exist_ok=True) # Create necessary directories
@@ -85,6 +93,13 @@ def convert_directory(dir):
 
         # If file is part of the files-to-copy arguments, just copy it to the obsidian vault
         if os.path.isfile(input_file_path) and (file_extension in FILES_TO_COPY or COPY_ALL_FILES) and file_extension not in [".docx",".doc"]:
+            if file_extension in [".pptx", ".ppt"] and POWERPOINT_TO_PDF:
+                print("Converting : " + input_file_path)
+                print("To : PDF")
+                input_file_path = convert_pp_to_pdf(input_file_path)
+                output_file_path = re.sub("\.pptx?$", ".pdf", output_file_path)
+                to_delete.append(input_file_path)
+
             print("Copying file : " + input_file_path)
             print("To : " + output_file_path)
             shutil.copyfile(input_file_path, output_file_path)
@@ -167,6 +182,18 @@ def convert_doc_to_docx(input_file_path):
     return output_file_path
 
 
+def convert_pp_to_pdf(input_file_path):
+    print("Converting " + input_file_path)
+    print("To : pdf")
+    current_dir = os.path.dirname(input_file_path)
+    try:
+        cmd_str = "\"" + LIBREOFFICE_EXECUTABLE + "\" --headless --convert-to pdf \"" + input_file_path + "\"  --outdir \"" + current_dir + "\""
+        subprocess.run(cmd_str, shell=True)
+    except Exception as e:
+        print("Error when converting " + input_file_path + " to doc : " + e)
+
+    return re.sub("\.pptx?$", ".pdf", input_file_path) # Replace the filename from .pptx to .pdf
+
 def trim(im):
     bg = Image.new(im.mode, im.size, im.getpixel((0,0)))
     diff = ImageChops.difference(im, bg)
@@ -204,11 +231,13 @@ if __name__ == '__main__':
     parser.add_argument("--libreoffice", required=False, help="The path to your libreoffice executable", default="C:\Program Files\LibreOffice\program\soffice.exe")
     parser.add_argument("--additional_files", required=False, help="A comma separated list of other files that can be copied to the vault (ex: .pdf,.xlsx)")
     parser.add_argument("-r", "--recursive", help="Runs recursively", action='store_true')
+    parser.add_argument("-p", "--powerpoint_to_pdf", help="Converts all powerpoints to a pdf file and copy the pdf file", action='store_true')
 
     args = parser.parse_args()
     OBSIDIAN_ATTACHMENTS = os.path.abspath(args.obsidian_attachment_directory)
     OBSIDIAN_OUTPUT = os.path.abspath(args.obsidian_output_directory)
     LIBREOFFICE_EXECUTABLE = args.libreoffice
+    POWERPOINT_TO_PDF = args.powerpoint_to_pdf
     if(args.additional_files == "all"):
         COPY_ALL_FILES = True
     elif(args.additional_files):
