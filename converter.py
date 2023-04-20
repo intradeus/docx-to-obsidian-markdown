@@ -44,10 +44,10 @@ def convert_directories(dir):
                 run_conversion(current_dir, input_file_path, output_file_path, file_extension)
 
             # If file is part of the files-to-copy list, just copy it to the obsidian vault
-            if os.path.isfile(input_file_path) and (file_extension in FILES_TO_COPY or COPY_ALL_FILES):
+            if os.path.isfile(input_file_path) and (file_extension in FILES_TO_COPY or COPY_ALL_FILES) and file_extension not in [".docx",".doc"]:
                 print("Copying file : " + input_file_path)
                 print("To : " + output_file_path)
-
+                Path(output_dir_path).mkdir(parents=True, exist_ok=True) # Create necessary directories
                 shutil.copyfile(input_file_path, output_file_path)
 
             if len(to_delete) > 0:
@@ -84,7 +84,7 @@ def convert_directory(dir):
             run_conversion(dir, input_file_path, output_file_path, file_extension)
 
         # If file is part of the files-to-copy arguments, just copy it to the obsidian vault
-        if os.path.isfile(input_file_path) and (file_extension in FILES_TO_COPY or COPY_ALL_FILES):
+        if os.path.isfile(input_file_path) and (file_extension in FILES_TO_COPY or COPY_ALL_FILES) and file_extension not in [".docx",".doc"]:
             print("Copying file : " + input_file_path)
             print("To : " + output_file_path)
             shutil.copyfile(input_file_path, output_file_path)
@@ -112,14 +112,6 @@ def run_conversion(dir, input_file_path, output_file_path, file_extension):
 
     clean_images(output_file_path) # Convert images and rename them in each file
     
-def clean_file(file):
-    """ Clean file of other doc(x) artefacts"""
-    with open (file, 'r', encoding='utf8') as opened_file:
-        content = opened_file.read()
-        content_new = re.sub("\[(.*)\]{.underline}", r'<u>\1</u>', content) # Replace all [text]{.underline} with <u>text</u>
-        
-    with open(file, 'wb') as opened_file:
-        opened_file.write(content_new.encode('utf8', 'ignore'))
 
 def clean_images(md_file_path):
     if(os.path.isdir(DEFAULT_MEDIA_OUTPUT)):
@@ -185,10 +177,20 @@ def trim(im):
 
 
 def replace_image_integration_in_file(image_name, file, new_img_name):
-    """ Look for any file that matches a ![](*image*.*){*} regex and replace it with the new image name in image obsidian integration ![[123.png]]"""
+    """ Look for any file that matches an image tag and replace it with the new image name in image obsidian integration ![[123.png]]"""
     with open (file, 'r', encoding='utf-8') as opened_file:
         content = opened_file.read()
-        content_new = re.sub('\<img src=\".*' + image_name + '\".*\>', "![[" + new_img_name + "]]", content)
+        content_new = re.sub('\<img src=\".*' + image_name + '\".*\>', "![[" + new_img_name + "]]", content) # markdown_mmd
+        # content_new = re.sub('\!\[\]\(.*' + image_name + '\)({.*})?', "![[" + new_img_name + "]]", content) # markdown
+    with open(file, 'wb') as opened_file:
+        opened_file.write(content_new.encode('utf8', 'ignore'))
+        
+def clean_file(file):
+    """ Clean file of other doc(x) artefacts"""
+    with open (file, 'r', encoding='utf-8') as opened_file:
+        content = opened_file.read()
+        content_new = re.sub("\[(.*)\]{.underline}", r'<u>\1</u>', content) # Replace all [text]{.underline} with <u>text</u>
+        
     with open(file, 'wb') as opened_file:
         opened_file.write(content_new.encode('utf8', 'ignore'))
 
@@ -213,7 +215,6 @@ if __name__ == '__main__':
         FILES_TO_COPY = args.additional_files.split(",")
     else:
         FILES_TO_COPY = []
-
     try:
         if(args.recursive):
             convert_directories(os.path.abspath(args.input_directory))
