@@ -93,3 +93,4 @@ Next ideas I wanna implement are :
 - [x] Make it work with .doc files
 - [x] Add possibility to convert PowerPoints to pdf before importing in obsidian
 - [x] Add possibility to link unsupported files in obsidian (Creating a new .md file and adding ![File](path/to/excel.ext) in it)
+- [x] Better unicode support for filenames (replace #, % characters and switch utf-16)

@@ -7,7 +7,6 @@ import shutil
 from pathlib import Path
 
 OBSIDIAN_ATTACHMENTS = ""
-OBSIDIAN_OUTPUT = ""
 LIBREOFFICE_EXECUTABLE = ""
 DEFAULT_MEDIA_OUTPUT = ""
 COPY_ALL_FILES = False
@@ -16,76 +15,14 @@ POWERPOINT_TO_PDF = False
 LINK_ALL_FILES = False
 LINK_TO_UNSUPPORTED_FILES = []
 
-def convert_directories(dir):
-    """ Recursive directory batch conversion/importation"""
-    if(dir is None or not os.path.isdir(dir)):
-        raise Exception("Directory argument cannot be empty or directory doesn't exist")
-    
-    for (root,_,files) in os.walk(dir, topdown=True):
-        for file in files:
-            global OBSIDIAN_OUTPUT
-            _, file_extension = os.path.splitext(file)
-            input_file_path = os.path.join(root, file)
-            relpath_to_deepdir = root.replace(dir, "") # relative path to add to obsidian
-            output_dir_path = os.path.join(OBSIDIAN_OUTPUT, relpath_to_deepdir[1:]) # remove 1st \ to relpath to fix issue path issue
-            output_file_path = os.path.join(output_dir_path, file)
-            to_delete = []
-            # If file is .doc, convert it to docx
-            if os.path.isfile(input_file_path) and file_extension == ".doc":
-                input_file_path = convert_doc_to_docx(input_file_path)
-                file_extension = ".docx"
-                output_file_path = re.sub("\.doc$", ".docx", output_file_path) # Replace the filepath from .doc to .docx
-                to_delete.append(input_file_path)
 
-            # If file is docx, convert it to md
-            if os.path.isfile(input_file_path) and file_extension == ".docx":
-                output_file_path = re.sub("\.docx$", ".md", output_file_path) # Replace the filepath from .docx to .md
-                current_dir = os.path.dirname(input_file_path)
-                Path(output_dir_path).mkdir(parents=True, exist_ok=True) # Create necessary directories
-                print("Copying file : " + input_file_path)
-                print("To : " + output_file_path)
-                run_conversion(current_dir, input_file_path, output_file_path, file_extension)
-
-            # If file is part of the files-to-copy list, just copy it to the obsidian vault
-            if os.path.isfile(input_file_path) and (file_extension in FILES_TO_COPY or COPY_ALL_FILES) and file_extension not in [".docx",".doc"]:
-                if file_extension in [".pptx", ".ppt"] and POWERPOINT_TO_PDF:
-                    print("Converting : " + input_file_path)
-                    print("To : PDF")
-                    input_file_path = convert_pp_to_pdf(input_file_path)
-                    output_file_path = re.sub("\.pptx?$", ".pdf", output_file_path)
-                    to_delete.append(input_file_path)
-
-                elif file_extension in LINK_TO_UNSUPPORTED_FILES or LINK_ALL_FILES:
-                    print("Creating markdown link file")
-                    # Create a new markdown file with a relative link to this file
-                    new_md_file_path = output_file_path + ".md"
-                    file_content = "![Link](./" + file.replace(" ", "%20") + ") \n"
-                    create_markdown_link_file(new_md_file_path, file_content)
-
-                print("Copying file : " + input_file_path)
-                print("To : " + output_file_path)
-                Path(output_dir_path).mkdir(parents=True, exist_ok=True) # Create necessary directories
-                shutil.copyfile(input_file_path, output_file_path)
-
-            if len(to_delete) > 0:
-                for item in to_delete:
-                    print("Deleting created artefact : " + item)
-                    try:
-                        os.remove(item)
-                    except Exception as e:
-                        print("Error while deleting: " + e)
-            print("---")
-
-def convert_directory(dir):
+def convert_files(output_dir, root, files):
     """ Single directory batch conversion/importation"""
-    if(dir is None or not os.path.isdir(dir)):
-        raise Exception("Directory argument cannot be empty or directory doesn't exist")
-    
-    for filename in os.listdir(dir):
-        # checking if it is a file
+    for filename in files:
         _, file_extension = os.path.splitext(filename)
-        input_file_path = os.path.join(dir, filename)
-        output_file_path = os.path.join(OBSIDIAN_OUTPUT, filename) # Set the output folder as the obsidian output folder
+        input_file_path = os.path.join(root, filename)
+        filename = filename.replace("#", "-").replace("%", "-") # Clean characters that cause issue
+        output_file_path = os.path.join(output_dir, filename)
         to_delete = []
         # If file is .doc, convert it to docx
         if os.path.isfile(input_file_path) and file_extension == ".doc":
@@ -96,9 +33,10 @@ def convert_directory(dir):
 
         if os.path.isfile(input_file_path) and file_extension == ".docx":
             output_file_path = re.sub("\.docx$", ".md", output_file_path) # Replace the filename from .docx to .md
+            Path(output_dir).mkdir(parents=True, exist_ok=True) # Create necessary directories
             print("Copying file : " + input_file_path)
             print("To : " + output_file_path)
-            run_conversion(dir, input_file_path, output_file_path, file_extension)
+            run_conversion(root, input_file_path, output_file_path, file_extension)
 
         # If file is part of the files-to-copy arguments, just copy it to the obsidian vault
         if os.path.isfile(input_file_path) and (file_extension in FILES_TO_COPY or COPY_ALL_FILES) and file_extension not in [".docx",".doc"]:
@@ -118,12 +56,16 @@ def convert_directory(dir):
 
             print("Copying file : " + input_file_path)
             print("To : " + output_file_path)
+            Path(output_dir).mkdir(parents=True, exist_ok=True) # Create necessary directories
             shutil.copyfile(input_file_path, output_file_path)
 
         if len(to_delete) > 0:
             for item in to_delete:
                 print("Deleting created artefact : " + item)
-                os.remove(item)
+                try:
+                    os.remove(item)
+                except Exception as e:
+                    print("Error while deleting: " + e)
 
         print("---")
 
@@ -238,8 +180,8 @@ def clean_file(file):
         opened_file.write(content_new.encode('utf8', 'ignore'))
 
 def create_markdown_link_file(file_path, file_content):
-    with open(file_path, 'w') as new_file:
-        new_file.write(file_content)
+    with open(file_path, 'wb') as new_file:
+        new_file.write(file_content.encode('utf8', 'ignore'))
 
 
 if __name__ == '__main__':
@@ -256,10 +198,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     OBSIDIAN_ATTACHMENTS = os.path.abspath(args.obsidian_attachment_directory)
-    OBSIDIAN_OUTPUT = os.path.abspath(args.obsidian_output_directory)
     LIBREOFFICE_EXECUTABLE = args.libreoffice
     POWERPOINT_TO_PDF = args.powerpoint_to_pdf
-
+    
     if(args.linked_files == "all"):
         LINK_ALL_FILES = True
     elif(args.linked_files):
@@ -270,11 +211,22 @@ if __name__ == '__main__':
     elif(args.additional_files):
         FILES_TO_COPY = args.additional_files.split(",")
 
+    obsidian_output = os.path.abspath(args.obsidian_output_directory)
+    initial_directory = os.path.abspath(args.input_directory)
+    
     try:
+        if(initial_directory is None or not os.path.isdir(initial_directory)):
+            raise Exception("Directory argument cannot be empty or directory doesn't exist")
+    
         if(args.recursive):
-            convert_directories(os.path.abspath(args.input_directory))
+            for (root,dirs,files) in os.walk(initial_directory, topdown=True):
+                relpath_to_deepdir = root.replace(initial_directory, "") # relative path to add to obsidian
+                output_dir_path = os.path.join(obsidian_output, relpath_to_deepdir[1:]) # remove 1st \ to relpath to fix issue path issue
+                convert_files(output_dir_path, root, files)
         else:
-            convert_directory(os.path.abspath(args.input_directory))
+            files = os.listdir(initial_directory)
+            convert_files(obsidian_output, initial_directory, files)
+
     except KeyboardInterrupt:
         print("Done")
         sys.exit(0)
