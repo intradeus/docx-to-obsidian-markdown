@@ -77,4 +77,4 @@ Next ideas I wanna implement are :
 - [x] recursive file import.
 - [x] Make it work with .doc files
 - [x] Add possibility to convert PowerPoints to pdf before importing in obsidian
-- [ ] Add possibility to link unsupported Office files in obsidian (Using ![Sheet](path/to/excel.xlsx))
+- [ ] Add possibility to link unsupported files in obsidian (Creating a new .md file and adding ![File](path/to/excel.ext) in it)
