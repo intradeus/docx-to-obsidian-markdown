@@ -64,7 +64,22 @@ Additional tags include :
 # If you want to convert all powerpoints (.pptx|.ppt) to a PDF before copying it (NOTE: you have to add '.pptx,.ppt' or 'all' to the `--additional_files` argument) 
 -p
 
+# If you want to copy your other files without converting them to pdf, but still want to access it through obsidian, you can use the linked_files feature
+# Read more about the link feature in the 'Linked markdown explained' part down below
+--linked_files .pptx,.xlsx # Will link only pptx and xlsx
+--linked_files all         # Will link all files (pdf included)
+
 ```
+
+## Linked markdown explained
+Obsidian cannot open xlsx or pptx files, but it can create a markdown file with a link that looks like this :
+```
+![Link](path/to/file.ext)
+```
+Doing so will create a visual button that, when clicked, will open the default app for this file. 
+See for yourself :
+![Obsidian relative links demo](assets/obsidian-relative-link-demo.gif)
+
 
 ## Speeds
 Speeds depends on a lot of factor, but from my tests, what takes the most time is the conversion from .emf to .png.
@@ -77,4 +92,4 @@ Next ideas I wanna implement are :
 - [x] recursive file import.
 - [x] Make it work with .doc files
 - [x] Add possibility to convert PowerPoints to pdf before importing in obsidian
-- [ ] Add possibility to link unsupported files in obsidian (Creating a new .md file and adding ![File](path/to/excel.ext) in it)
+- [x] Add possibility to link unsupported files in obsidian (Creating a new .md file and adding ![File](path/to/excel.ext) in it)
