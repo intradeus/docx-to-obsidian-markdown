@@ -13,6 +13,8 @@ DEFAULT_MEDIA_OUTPUT = ""
 COPY_ALL_FILES = False
 FILES_TO_COPY = []
 POWERPOINT_TO_PDF = False
+LINK_ALL_FILES = False
+LINK_TO_UNSUPPORTED_FILES = []
 
 def convert_directories(dir):
     """ Recursive directory batch conversion/importation"""
@@ -52,6 +54,13 @@ def convert_directories(dir):
                     input_file_path = convert_pp_to_pdf(input_file_path)
                     output_file_path = re.sub("\.pptx?$", ".pdf", output_file_path)
                     to_delete.append(input_file_path)
+
+                elif file_extension in LINK_TO_UNSUPPORTED_FILES or LINK_ALL_FILES:
+                    print("Creating markdown link file")
+                    # Create a new markdown file with a relative link to this file
+                    new_md_file_path = output_file_path + ".md"
+                    file_content = "![Link](./" + file.replace(" ", "%20") + ") \n"
+                    create_markdown_link_file(new_md_file_path, file_content)
 
                 print("Copying file : " + input_file_path)
                 print("To : " + output_file_path)
@@ -99,6 +108,13 @@ def convert_directory(dir):
                 input_file_path = convert_pp_to_pdf(input_file_path)
                 output_file_path = re.sub("\.pptx?$", ".pdf", output_file_path)
                 to_delete.append(input_file_path)
+
+            elif file_extension in LINK_TO_UNSUPPORTED_FILES or LINK_ALL_FILES:
+                print("Creating markdown link file")
+                # Create a new markdown file with a link to this file
+                new_md_file_path = output_file_path + ".md"
+                file_content = "![Link](./" + filename.replace(" ", "%20") + ") \n"
+                create_markdown_link_file(new_md_file_path, file_content)
 
             print("Copying file : " + input_file_path)
             print("To : " + output_file_path)
@@ -221,6 +237,10 @@ def clean_file(file):
     with open(file, 'wb') as opened_file:
         opened_file.write(content_new.encode('utf8', 'ignore'))
 
+def create_markdown_link_file(file_path, file_content):
+    with open(file_path, 'w') as new_file:
+        new_file.write(file_content)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = 'Convert docx to md, for obsidian import')
@@ -232,18 +252,24 @@ if __name__ == '__main__':
     parser.add_argument("--additional_files", required=False, help="A comma separated list of other files that can be copied to the vault (ex: .pdf,.xlsx)")
     parser.add_argument("-r", "--recursive", help="Runs recursively", action='store_true')
     parser.add_argument("-p", "--powerpoint_to_pdf", help="Converts all powerpoints to a pdf file and copy the pdf file", action='store_true')
+    parser.add_argument("--linked_files", required=False, help="A comma separated list of other files that will be linked into a new markdown file (ex: .xlsx,.vba). Files need to be part of the additional_files list.")
 
     args = parser.parse_args()
     OBSIDIAN_ATTACHMENTS = os.path.abspath(args.obsidian_attachment_directory)
     OBSIDIAN_OUTPUT = os.path.abspath(args.obsidian_output_directory)
     LIBREOFFICE_EXECUTABLE = args.libreoffice
     POWERPOINT_TO_PDF = args.powerpoint_to_pdf
+
+    if(args.linked_files == "all"):
+        LINK_ALL_FILES = True
+    elif(args.linked_files):
+        LINK_TO_UNSUPPORTED_FILES = args.linked_files.split(",")
+
     if(args.additional_files == "all"):
         COPY_ALL_FILES = True
     elif(args.additional_files):
         FILES_TO_COPY = args.additional_files.split(",")
-    else:
-        FILES_TO_COPY = []
+
     try:
         if(args.recursive):
             convert_directories(os.path.abspath(args.input_directory))
