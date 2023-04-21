@@ -19,7 +19,7 @@ LINK_TO_UNSUPPORTED_FILES = []
 def convert_files(output_dir, root, files):
     """ Single directory batch conversion/importation"""
     for filename in files:
-        if(re.search("^~\$", filename) or re.search("^\.", filename)):
+        if(re.search("^~\$", filename) or re.search("^\.", filename) or re.search("^@", filename)):
             continue # If filename starts with ~$, or with a '.', skip
         _, file_extension = os.path.splitext(filename)
         input_file_path = os.path.join(root, filename)
