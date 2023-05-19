@@ -19,6 +19,8 @@ LINK_TO_UNSUPPORTED_FILES = []
 def convert_files(output_dir, root, files):
     """ Single directory batch conversion/importation"""
     for filename in files:
+        if(re.search("^~\$", filename) or re.search("^\.", filename) or re.search("^@", filename)):
+            continue # If filename starts with ~$, or with a '.', skip
         _, file_extension = os.path.splitext(filename)
         input_file_path = os.path.join(root, filename)
         filename = filename.replace("#", "-").replace("%", "-") # Clean characters that cause issue
@@ -41,8 +43,6 @@ def convert_files(output_dir, root, files):
         # If file is part of the files-to-copy arguments, just copy it to the obsidian vault
         if os.path.isfile(input_file_path) and (file_extension in FILES_TO_COPY or COPY_ALL_FILES) and file_extension not in [".docx",".doc"]:
             if file_extension in [".pptx", ".ppt"] and POWERPOINT_TO_PDF:
-                print("Converting : " + input_file_path)
-                print("To : PDF")
                 input_file_path = convert_pp_to_pdf(input_file_path)
                 output_file_path = re.sub("\.pptx?$", ".pdf", output_file_path)
                 to_delete.append(input_file_path)
@@ -52,6 +52,7 @@ def convert_files(output_dir, root, files):
                 # Create a new markdown file with a link to this file
                 new_md_file_path = output_file_path + ".md"
                 file_content = "![Link](./" + filename.replace(" ", "%20") + ") \n"
+                Path(output_dir).mkdir(parents=True, exist_ok=True) # Create necessary directories
                 create_markdown_link_file(new_md_file_path, file_content)
 
             print("Copying file : " + input_file_path)
@@ -166,7 +167,7 @@ def replace_image_integration_in_file(image_name, file, new_img_name):
     with open (file, 'r', encoding='utf-8') as opened_file:
         content = opened_file.read()
         content_new = re.sub('\<img src=\".*' + image_name + '\".*\>', "![[" + new_img_name + "]]", content) # markdown_mmd
-        # content_new = re.sub('\!\[\]\(.*' + image_name + '\)({.*})?', "![[" + new_img_name + "]]", content) # markdown
+        content_new = re.sub('\!\[\]\(.*' + image_name + '\)({.*})?', "![[" + new_img_name + "]]", content_new) # markdown
     with open(file, 'wb') as opened_file:
         opened_file.write(content_new.encode('utf8', 'ignore'))
         
